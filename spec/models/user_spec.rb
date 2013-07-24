@@ -156,16 +156,26 @@ describe "with a password that's too short" do
     end
 
     it "should have the right microposts in the right order" do
-      expect(@user.microposts.to_a).to eq [newer_micropost, older_micropost]
+      @user.microposts.should == [newer_micropost, older_micropost]
     end
 
     it "should destroy associated microposts" do
-      microposts = @user.microposts.to_a
+      microposts = @user.microposts.dup
       @user.destroy
-      expect(microposts).not_to be_empty
+      microposts.should_not be_empty
       microposts.each do |micropost|
-        expect(Micropost.where(id: micropost.id)).to be_empty
+        Micropost.find_by_id(micropost.id).should be_nil
       end
+    end
+
+    describe "status" do
+      let(:unfollowed_post) do
+        FactoryGirl.create(:micropost, user: FactoryGirl.create(:user))
+      end
+
+      its(:feed) { should include(newer_micropost) }
+      its(:feed) { should include(older_micropost) }
+      its(:feed) { should_not include(unfollowed_post) }
     end
   end  
 end
